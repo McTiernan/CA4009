@@ -44,11 +44,12 @@ public class Search {
     //HashMap < String , int> words = new HashMap();
     static void getWords() throws FileNotFoundException {
         int count=0;
+        boolean doneDoc = false;
         boolean docStart = false;
         Scanner reader = new Scanner(new FileInputStream("output.txt"));
         while (reader.hasNext()) {      // while there is another token to read
             String temp = reader.next();
-             if (temp.equals("Vector:") && count==0){
+             if (temp.equals("Vector:") && !docStart){
                 String s = reader.next();
                  docStart = true;
                  String[] wordSplit;
@@ -57,9 +58,8 @@ public class Search {
                  searchedWord[1] = searchedWord[1].substring(0, searchedWord[1].length()-1);
                  s = reader.next();
                  System.out.println(searchedWord[0] +" " + searchedWord[1] + " " +s);
-                 count++;
             }
-            else if(count>0 && count <= 10 &&docStart){
+            else if(docStart){
 
 
                  String[] wordSplit;
@@ -68,10 +68,14 @@ public class Search {
                  //System.out.println( " In loop 2 : "+wordSplit[0]);
                  wordSplit[1] = wordSplit[1].substring(0, wordSplit[1].length()-1);
                  String s = reader.next();
+                 if(s.contains("<")) {
+                     String[] lastEntry = s.split("<");
+                     s = lastEntry[0];
+                     doneDoc = true;
+                 }
                  System.out.println(wordSplit[0] + " " + wordSplit[1]+ " "+s);
-                 count++;
             }
-            else count = 0;
+            if (doneDoc) {doneDoc=false;docStart = false; System.out.println("____________________________________________________");}
 
 
         }
