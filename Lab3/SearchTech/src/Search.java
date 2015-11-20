@@ -39,27 +39,26 @@ public class Search {
     }
     //HashMap < String , int> words = new HashMap();
     static void getWords() throws FileNotFoundException {
-        int count=0;
-        String docName;
+        String docName;                                     //Variable with the document name
         boolean docNameRetrieved =false;
         boolean doneDoc = false;
         boolean docStart = false;
-        Scanner reader = new Scanner(new FileInputStream("output.txt"));
+        Scanner reader = new Scanner(new FileInputStream("output.txt"));  //Read in the file
         while (reader.hasNext()) {      // while there is another token to read
-            String temp = reader.next();
-            if (!docNameRetrieved ){
-                String [] getDocStart = temp.split(">");
-                if(getDocStart[0].equals("target=\"_blank\""))
+            String temp = reader.next(); //temp is equal to the next string
+            if (!docNameRetrieved ){    //If we haven't yet read the document name
+                String [] getDocStart = temp.split(">");  //split the string here
+                if(getDocStart[0].equals("target=\"_blank\""))  //this is what the start of the string looks like
                 {
-                    String[] docHeading = getDocStart[1].split("<");
-                    docName = docHeading[0];
-                    docNameRetrieved = true;
-                    System.out.println("DocName: " + docName);
+                    String[] docHeading = getDocStart[1].split("<"); //if its a match split at the '<'
+                    docName = docHeading[0];   //document name is equal to whats at position 0
+                    docNameRetrieved = true;    //tell the program we have got the doc name
+                    System.out.println("DocName: " + docName);  //just for testing purposes
                 }
             }
-             if (temp.equals("Vector:") && !docStart){
+             if (temp.equals("Vector:") && !docStart){ //when we read the vector enter
                 String s = reader.next();
-                 docStart = true;
+                 docStart = true;       //let the program know we have started reading the words in the document
                  String[] wordSplit;
                 wordSplit= s.split(">");
                  String [] searchedWord=wordSplit[1].split(":");
@@ -69,7 +68,7 @@ public class Search {
                  System.out.println(searchedWord[0] + " " + searchedWord[1] + " " +s);
             }
             else if(docStart){
-
+                    //read the rest of the words in the document
 
                  String[] wordSplit;
                  wordSplit = temp.split(":");
@@ -77,14 +76,13 @@ public class Search {
                  //System.out.println( " In loop 2 : "+wordSplit[0]);
                  wordSplit[1] = wordSplit[1].substring(0, wordSplit[1].length()-1);
                  String s = reader.next();
-                 if(s.contains("<")) {
-                     String[] lastEntry = s.split("<");
+                 if(s.contains("<")) { //when a string contatins the '<' we know we have reached the last word.
+                     String[] lastEntry = s.split("<"); // split it and let s = to the idf
                      s = lastEntry[0];
                      doneDoc = true;
                  }
                  System.out.println(wordSplit[0] + " " + wordSplit[1]+ " "+s);
             }
-            if (doneDoc) {doneDoc=false;docStart = false; System.out.println("____________________________________________________");}
             if (doneDoc) {doneDoc=false;docStart = false; docNameRetrieved = false; System.out.println("____________________________________________________");}
 
 
@@ -94,7 +92,7 @@ public class Search {
 
         public static void main(String[] args) throws Exception {
 
-            //downloadFile();
+            //downloadFile(); commented it out because need to be on campus to access url
             getWords();
 
     }
