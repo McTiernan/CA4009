@@ -26,10 +26,6 @@ public class Search {
             while ((count = in.read(data, 0, 1024)) != -1) {
                 fout.write(data, 0, count);
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -44,11 +40,23 @@ public class Search {
     //HashMap < String , int> words = new HashMap();
     static void getWords() throws FileNotFoundException {
         int count=0;
+        String docName;
+        boolean docNameRetrieved =false;
         boolean doneDoc = false;
         boolean docStart = false;
         Scanner reader = new Scanner(new FileInputStream("output.txt"));
         while (reader.hasNext()) {      // while there is another token to read
             String temp = reader.next();
+            if (!docNameRetrieved ){
+                String [] getDocStart = temp.split(">");
+                if(getDocStart[0].equals("target=\"_blank\""))
+                {
+                    String[] docHeading = getDocStart[1].split("<");
+                    docName = docHeading[0];
+                    docNameRetrieved = true;
+                    System.out.println("DocName: " + docName);
+                }
+            }
              if (temp.equals("Vector:") && !docStart){
                 String s = reader.next();
                  docStart = true;
@@ -58,6 +66,7 @@ public class Search {
                  searchedWord[1] = searchedWord[1].substring(0, searchedWord[1].length()-1);
                  s = reader.next();
                  System.out.println(searchedWord[0] +" " + searchedWord[1] + " " +s);
+                 System.out.println(searchedWord[0] + " " + searchedWord[1] + " " +s);
             }
             else if(docStart){
 
@@ -76,6 +85,7 @@ public class Search {
                  System.out.println(wordSplit[0] + " " + wordSplit[1]+ " "+s);
             }
             if (doneDoc) {doneDoc=false;docStart = false; System.out.println("____________________________________________________");}
+            if (doneDoc) {doneDoc=false;docStart = false; docNameRetrieved = false; System.out.println("____________________________________________________");}
 
 
         }
