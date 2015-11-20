@@ -64,7 +64,6 @@ public class Search {
                  String [] searchedWord=wordSplit[1].split(":");
                  searchedWord[1] = searchedWord[1].substring(0, searchedWord[1].length()-1);
                  s = reader.next();
-                 System.out.println(searchedWord[0] +" " + searchedWord[1] + " " +s);
                  System.out.println(searchedWord[0] + " " + searchedWord[1] + " " +s);
             }
             else if(docStart){
