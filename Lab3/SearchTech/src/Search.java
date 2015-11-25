@@ -11,7 +11,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-class struct{
+ class struct{
 
     String word;
     int frequency;
@@ -55,16 +55,17 @@ public class Search {
     }
     static void getWords() throws FileNotFoundException {
         String docName = " ";//Variable with the document name
-        struct structure = new struct();
-        String word = "";
-        int frequency=0;
-        double idf=0;
+        struct structure;
+        String word;
+        int frequency;
+        double idf;
         boolean docNameRetrieved = false;
         boolean doneDoc = false;
         boolean docStart = false;
         Scanner reader = new Scanner(new FileInputStream("output.txt"));  //Read in the file
         LinkedList<struct> list= new LinkedList<>();
         while (reader.hasNext()) {      // while there is another token to read
+            structure= new struct();
             String temp = reader.next(); //temp is equal to the next string
             if (!docNameRetrieved) {    //If we haven't yet read the document name
                 String[] getDocStart = temp.split(">");  //split the string here
@@ -99,7 +100,7 @@ public class Search {
                 word = wordSplit[0];
                 frequency = Integer.parseInt(wordSplit[1]);
                 String s = reader.next();
-                if (s.contains("<")) { //when a string contatins the '<' we know we have reached the last word.
+                if (s.contains("<")) { //when a string contains the '<' we know we have reached the last word.
                     String[] lastEntry = s.split("<"); // split it and let s = to the idf
                     idf = Double.parseDouble(lastEntry[0]);
                     doneDoc = true;
@@ -114,9 +115,10 @@ public class Search {
                 doneDoc = false;
                 docStart = false;
                 docNameRetrieved = false;
-                System.out.println("List before its sent size" + list.size());
-                createList(docName, list);
-                list.clear();
+                System.out.println("List before its sent size " + list.size());
+                //createList(docName, list);
+                docName_length.put(docName, list);
+                list = new LinkedList<>();
                 //System.out.println("____________________________________________________");
             }
 
@@ -124,7 +126,7 @@ public class Search {
 
         }
 
-        //System.out.println(docName_length);
+        System.out.println(docName_length);
 
     }
 
@@ -142,17 +144,32 @@ public class Search {
 
         }
     }
-    static void createList(String doc_name,LinkedList<struct> str) {
+    /*static void createList(String doc_name,LinkedList<struct> str) {
         struct test = str.get(0);
-        System.out.println("in createList size : " + test.word + test.frequency);
         docName_length.put(doc_name, str);
+        System.out.println("size of map: "+docName_length.size());
+        for ( String key: docName_length.keySet()){
 
-    }
+            LinkedList <struct> fullList = docName_length.get(key);
+            System.out.println("doucment name: " + key);
+            System.out.println(fullList.size());
+            //for (struct st : fullList) {
+            //    System.out.println(st.word + " " + st.frequency + " " + st.idf);
+            //}
 
-        public static void main(String[] args) throws Exception {
+
+        }
+
+    }*/
+
+        public static void main(String[] args) {
 
             //downloadFile(); commented it out because need to be on campus to access url
-            getWords();
+            try {
+                getWords();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
             printMap();
 
     }
