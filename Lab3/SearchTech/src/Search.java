@@ -16,11 +16,13 @@ import java.util.*;
     String word;
     int frequency;
     double idf;
+     double docfreq;
 
-    void put(String wrd,int freq, double i_d_f){
+    void put(String wrd,int freq, double i_d_f,double df){
         word=wrd;
         frequency= freq;
         idf = i_d_f;
+        docfreq = df;
     }
 }
 
@@ -32,7 +34,7 @@ public class Search {
     static void downloadFile() throws IOException {
         BufferedInputStream in = null;
         FileOutputStream fout = null;
-        String url = "http://136.206.115.117:8080/IRModelGenerator/SearchServlet?query=dai&simf=BM25&k=1.2&b=0.75&numwanted=10";
+        String url = "http://136.206.115.117:8080/IRModelGenerator/SearchServlet?query=bone&simf=BM25&k=1.2&b=0.75&numwanted=10";
         try {
             in = new BufferedInputStream(new URL(url).openStream());
             fout = new FileOutputStream("output.txt");
@@ -79,15 +81,18 @@ public class Search {
             }
             if (temp.equals("Vector:") && !docStart) { //when we read the vector enter
                 String s = reader.next();
-                docStart = true;       //let the program know we have started reading the words in the document
+                       //let the program know we have started reading the words in the document
                 String[] wordSplit;
                 wordSplit = s.split(">");
                 String[] searchedWord = wordSplit[1].split(":");
                 searchedWord[1] = searchedWord[1].substring(0, searchedWord[1].length() - 1);
-                word = searchedWord[1];
+                word = searchedWord[0];
                 frequency = Integer.parseInt(searchedWord[1]);
                 idf = Double.parseDouble(reader.next());
-                structure.put(word, frequency, idf);
+                double df = getDF(idf);
+                structure.put(word, frequency, idf, df);
+                list.add(structure);
+                docStart = true;
                 //System.out.println(searchedWord[0] + " " + searchedWord[1] + " " + idf);
             } else if (docStart) {
                 //read the rest of the words in the document
@@ -106,8 +111,9 @@ public class Search {
                     doneDoc = true;
                 }
                 else idf = Double.parseDouble(s);
+                double df = getDF(idf);
                 //System.out.println(wordSplit[0] + " " + wordSplit[1] + " " + s);
-                structure.put(word,frequency,idf);
+                structure.put(word,frequency,idf,df);
                 //System.out.println(structure.word + structure.idf + structure.frequency);
                 list.add(structure);
             }
@@ -115,7 +121,7 @@ public class Search {
                 doneDoc = false;
                 docStart = false;
                 docNameRetrieved = false;
-                System.out.println("List before its sent size " + list.size());
+                //System.out.println("List before its sent size " + list.size());
                 //createList(docName, list);
                 docName_length.put(docName, list);
                 list = new LinkedList<>();
@@ -126,7 +132,7 @@ public class Search {
 
         }
 
-        System.out.println(docName_length);
+        //System.out.println(docName_length);
 
     }
 
@@ -138,12 +144,118 @@ public class Search {
             System.out.println(key);
             System.out.println(fullList.size());
             for (struct st : fullList) {
-                System.out.println(st.word + " " + st.frequency + " " + st.idf);
+                System.out.println(st.word + " " + st.frequency + " " + st.idf + " " + st.docfreq);
             }
 
 
         }
     }
+
+    static HashMap<String,Integer> wordDf = new HashMap<>();
+
+    static void findWord(){
+
+        int count = 0;
+        for ( String key: docName_length.keySet()){
+
+            LinkedList <struct> fullList = docName_length.get(key);
+            for (struct st : fullList) {
+
+                for( String k: docName_length.keySet()) {
+                    LinkedList<struct> temp = docName_length.get(k);
+                    {
+                        for (struct s : temp) {
+                            if(st.word.equals(s.word)){
+                                count++;
+                            }
+                        }
+                    }
+                }
+                wordDf.put(st.word,count);
+                count = 0;
+            }
+
+
+        }
+
+        for ( String key: wordDf.keySet()){
+
+            int number = wordDf.get(key);
+            robertson(key, number);
+
+
+        }
+    }
+
+    static HashMap<String, Double> wordRob = new HashMap<>();
+
+    static void robertson(String word, int ri){
+
+            double ni=0.0;
+        for (String key: docName_length.keySet()) {
+            LinkedList<struct> fullList = docName_length.get(key);
+            for (struct st : fullList) {
+                if (st.word.equals(word)) {
+                    ni = st.docfreq;
+                }
+            }
+        }
+
+            double top = (ri +0.5)*(500000 - ni - 10 + ri + 0.5);
+            double bottom = (ni - ri +.5) * ( 10 - ri + 0.5);
+
+            double result=Math.log(top/bottom);
+        result = result*ri;
+        wordRob.put(word, result);
+        //System.out.println(word + " " + result);
+
+
+    }
+    static void getTop(){
+        double biggest=0.0;
+        System.out.println("At start of getTOp");
+        int count = 0;
+        String bigword="";
+        String [] topFive = new String[10000];
+
+
+        while(count < 6) {
+            //System.out.println("Hello");
+            for (String key : wordRob.keySet()) {
+                System.out.println("FIRST--------"+key);
+                double tempVal = wordRob.get(key);
+                //System.out.println("first");
+                for (String k : wordRob.keySet()) {
+                    double t = wordRob.get(k);
+                    //System.out.println(tempVal);
+                    System.out.println(k);
+                    if (tempVal > t) {
+
+                        biggest = tempVal;
+                        //System.out.println(key);
+                        bigword = key;//Need to
+
+                    } else {
+                        biggest = t;
+                        bigword = k;
+
+                    }
+                }
+
+                topFive[count] = bigword;
+                count++;
+                //System.out.println(bigword + " " + count);
+                break;
+
+            }
+
+            //wordRob.remove(biggest);
+        }
+        for(int jj = 0; jj<10; jj++){
+            //System.out.println(topFive[jj]);
+        }
+    }
+
     /*static void createList(String doc_name,LinkedList<struct> str) {
         struct test = str.get(0);
         docName_length.put(doc_name, str);
@@ -162,15 +274,23 @@ public class Search {
 
     }*/
 
-        public static void main(String[] args) {
+    static double getDF(double idf){
 
-            //downloadFile(); commented it out because need to be on campus to access url
+        double docFreq = (1/idf) * 500000;
+        return docFreq;
+    }
+
+        public static void main(String[] args) throws IOException {
+
+            downloadFile(); //commented it out because need to be on campus to access url
             try {
                 getWords();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            printMap();
+            findWord();
+            getTop();
+            //printMap();
 
     }
 
