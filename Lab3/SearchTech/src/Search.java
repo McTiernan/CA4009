@@ -5,13 +5,12 @@
  */
 
 
-import sun.awt.image.ImageWatched;
 
 import java.net.*;
 import java.io.*;
 import java.util.*;
 
- class struct{
+class struct{
 
     String word;
     int frequency;
@@ -29,12 +28,20 @@ import java.util.*;
 public class Search {
 
     static HashMap<String, LinkedList<struct>> docName_length = new HashMap<>();
-
+    static LinkedList<String> searchTerms;
 
     static void downloadFile() throws IOException {
         BufferedInputStream in = null;
         FileOutputStream fout = null;
-        String url = "http://136.206.115.117:8080/IRModelGenerator/SearchServlet?query=bone&simf=BM25&k=1.2&b=0.75&numwanted=10";
+        String searchStr="";
+        for(int i= 0 ;i<searchTerms.size();i++) {
+            if(i==searchTerms.size()-1) {
+                searchStr = searchStr + searchTerms.get(i);
+            }
+            else
+                searchStr = searchStr + searchTerms.get(i) + "%20";
+            }
+        String url = "http://136.206.115.117:8080/IRModelGenerator/SearchServlet?query=" +searchStr+     "&simf=BM25&k=1.2&b=0.75&numwanted=10";
         try {
             in = new BufferedInputStream(new URL(url).openStream());
             fout = new FileOutputStream("output.txt");
@@ -211,50 +218,52 @@ public class Search {
 
 
     }
-    static void getTop(){
-        double biggest=0.0;
-        System.out.println("At start of getTOp");
+    static void getTop()
+    {
+        List<String> top5 = new ArrayList<String>();
+        Map.Entry<String,Double> maxEntry = null;
         int count = 0;
-        String bigword="";
-        String [] topFive = new String[10000];
-
-
-        while(count < 6) {
-            //System.out.println("Hello");
-            for (String key : wordRob.keySet()) {
-                System.out.println("FIRST--------"+key);
-                double tempVal = wordRob.get(key);
-                //System.out.println("first");
-                for (String k : wordRob.keySet()) {
-                    double t = wordRob.get(k);
-                    //System.out.println(tempVal);
-                    System.out.println(k);
-                    if (tempVal > t) {
-
-                        biggest = tempVal;
-                        //System.out.println(key);
-                        bigword = key;//Need to
-
-                    } else {
-                        biggest = t;
-                        bigword = k;
-
-                    }
+        while(count<10)
+        {
+            maxEntry = null;
+            for (Map.Entry<String, Double> entry : wordRob.entrySet())
+            {
+                if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
+                {
+                    maxEntry = entry;
                 }
-
-                topFive[count] = bigword;
-                count++;
-                //System.out.println(bigword + " " + count);
-                break;
-
             }
+            top5.add(maxEntry.getKey());
+            wordRob.put(maxEntry.getKey(), 0.0);
+            count++;
+        }
+        for (int i = 0; i < top5.size() ; i++) {
 
-            //wordRob.remove(biggest);
+            searchTerms.add(top5.get(i));
         }
-        for(int jj = 0; jj<10; jj++){
-            //System.out.println(topFive[jj]);
-        }
+        System.out.println(searchTerms);
     }
+
+    static void createRes(String name){
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(name, "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        int count = 1;
+        for(String key : docName_length.keySet()){
+            writer.println("301\tQ0\t" + key +"\t" +count +"\t" + (1.0/count) + "\t" + "BM25.1.2.0.75");
+
+            count++;
+
+        }
+        writer.close();
+
+
+    }
+
+
 
     /*static void createList(String doc_name,LinkedList<struct> str) {
         struct test = str.get(0);
@@ -281,7 +290,10 @@ public class Search {
     }
 
         public static void main(String[] args) throws IOException {
-
+            searchTerms = new LinkedList<>();
+            searchTerms.add("International");
+            searchTerms.add("Organized");
+            searchTerms.add("Crime");
             downloadFile(); //commented it out because need to be on campus to access url
             try {
                 getWords();
@@ -289,9 +301,21 @@ public class Search {
                 e.printStackTrace();
             }
             findWord();
+
+            createRes("1.1.res");
+/////////////////////////////////////////////////////////
+
             getTop();
+            downloadFile(); //commented it out because need to be on campus to access url
+            try {
+                getWords();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            findWord();
+            createRes("1.2.res");
             //printMap();
 
-    }
+        }
 
 }
